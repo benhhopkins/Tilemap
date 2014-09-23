@@ -5,20 +5,28 @@ function generateLevel(){
   for(var i=0; i<64; i++){
     var currentRow = [];
     for(var j=0; j < 50; j++){
-      var tile = {terrain: 0, upgrades: [], units: []};
-      currentRow.push(0);
+      var tile = {terrainSprite: PIXI.Sprite.fromFrame(0), terrain: 0, upgrades: [], units: []};
+      currentRow.push(tile);
     }
     level.push(currentRow);
   }
 
   // spawn some landmasses
   for(var j=0; j<8; j++){
-    for(var i=0; i<10; i++){
+    for(var i=0; i<12; i++){
       spawnLandmass(level, Math.floor(i / 2) + 1,
                     Math.floor(Math.random()*64), Math.floor(Math.random()*50));
     }
   }
 
+  // add tile sprites to game
+  for(var i=0; i<64; i++){
+    for(var j=0; j < 50; j++){
+      level[i][j].terrainSprite.position.x = mapBorderLeft + tileSize * i;
+      level[i][j].terrainSprite.position.y = tileSize * j;
+      gameContainer.addChild(level[i][j].terrainSprite);
+    }
+  }
 
   return level;
 }
@@ -30,8 +38,9 @@ function spawnLandmass(level, size, x, y)
   y = Math.max(y, 0);
   y = Math.min(y, 49);
 
-  if(level[x][y] < size){
-    level[x][y] = Math.min(Math.max(1, size - Math.floor(Math.random() + .7)), 3);
+  if(level[x][y].terrain < size){
+    level[x][y].terrain = Math.min(Math.max(1, size - Math.floor(Math.random() + .9)), 4);
+    level[x][y].terrainSprite = PIXI.Sprite.fromFrame(level[x][y].terrain);
   }
 
   for(var i = 0; i<size; i++){
