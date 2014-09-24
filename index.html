@@ -7,31 +7,36 @@
 				margin: 0;
 				padding: 0;
 			}
+            canvas {
+                border: 5px solid #000000;
+            }
 		</style>
         <script src="pixi.dev.js"></script>
         <script src="generateLevel.js"></script>
-        <script src="drawLevel.js"></script>
 		<script src="main.js"></script>
 	</head>
 	<body>
         <script>
-            // create an new instance of a pixi stage with a grey background
+            PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
+
             var stage = new PIXI.Stage(0x888888, true);
-            // create a renderer instance width=640 height=480
             var renderer = PIXI.autoDetectRenderer(1280,800);
-            // importing a texture atlas created with texturepacker
+
             var tileAtlas = ["citystates.json"];
-            // create a new loader
             var loader = new PIXI.AssetLoader(tileAtlas);
-            // create an empty container
-            var gameContainer = new PIXI.DisplayObjectContainer();
-            // add the container to the stage
-            stage.addChild(gameContainer);
-            // add the renderer view element to the DOM
+
+            var tilesContainer = new PIXI.DisplayObjectContainer();
+            tilesContainer.position.x = 256;
+            tilesContainer.interactive = true;
+            stage.addChild(tilesContainer);
+
+            var menuContainer = new PIXI.DisplayObjectContainer();
+            menuContainer.interactive = true;
+            stage.addChild(menuContainer);
+
             document.body.appendChild(renderer.view);
-            // use callback
+
             loader.onComplete = onLoaded
-            //begin load
             loader.load();
         </script>
 	</body>
