@@ -12,8 +12,8 @@ function generateLevel(){
   }
 
   // spawn some landmasses
-  for(var j=0; j<8; j++){
-    for(var i=0; i<12; i++){
+  for(var j=0; j<25; j++){ // number of landmasses
+    for(var i=0; i<12; i++){ // size of landmasses
       spawnLandmass(level, Math.floor(i / 2) + 1,
                     Math.floor(Math.random()*mapWidth), Math.floor(Math.random()*mapHeight));
     }
@@ -41,7 +41,8 @@ function spawnLandmass(level, size, x, y)
   y = Math.min(y, mapHeight - 1);
 
   if(level[x][y].terrain < size){
-    level[x][y].terrain = Math.min(Math.max(1, size - Math.floor(Math.random() + .9)), 4);
+    level[x][y].terrain = Math.min(Math.max(1,
+                             Math.floor(size / (Math.random() + 0.9))), 4);
     level[x][y].terrainSprite = PIXI.Sprite.fromFrame(level[x][y].terrain);
   }
 

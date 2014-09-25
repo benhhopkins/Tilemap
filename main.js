@@ -3,20 +3,31 @@
 var tileSize = 16;
 var mapWidth = 64;
 var mapHeight = 50;
-var mapZoom = 2;
+var mapZoom = 1;
 
-var selectedTileCoords = [0, 0];
+var mouseoverTileCoords = [0, 0];
+var selectedTileCoords = [32, 25];
 
 
 function onLoaded(){
   var level = null;
   var graphicsMenu = null;
   var graphicsTiles = null;
+  var graphicsTilesMouseover = null;
 
   level = generateLevel();
   graphicsTiles = new PIXI.Graphics();
   tilesContainer.addChild(graphicsTiles);
+  graphicsTilesMouseover = new PIXI.Graphics();
+  tilesContainer.addChild(graphicsTilesMouseover);
 
+  graphicsTiles.lineStyle(2, 0xFFFF00, 1);
+  graphicsTiles.beginFill(0x000000, 0);
+  graphicsTiles.drawRect(selectedTileCoords[0] * tileSize,
+                         selectedTileCoords[1] * tileSize,
+                         tileSize,
+                         tileSize);
+  graphicsTiles.endFill();
 
   tilesContainer.scale.x = tilesContainer.scale.y = mapZoom;
 
@@ -60,6 +71,22 @@ function onLoaded(){
       this.position.y = Math.max(this.position.y, -1 * tileSize * mapHeight * mapZoom + 800);
       this.position.y = Math.min(this.position.y, 0);
     }
+    else{
+      var mouseOverPoint = [0, 0];
+      mouseOverPoint[0] = data.getLocalPosition(this.parent).x - this.position.x;
+      mouseOverPoint[1] = data.getLocalPosition(this.parent).y - this.position.y;
+
+      mouseoverTileCoords = [Math.floor(mouseOverPoint[0] / (tileSize * mapZoom)),
+                            Math.floor(mouseOverPoint[1] / (tileSize * mapZoom))];
+      graphicsTilesMouseover.clear();
+      graphicsTilesMouseover.lineStyle(1, 0xFFFFFF, 1);
+      graphicsTilesMouseover.beginFill(0x000000, 0);
+      graphicsTilesMouseover.drawRect(mouseoverTileCoords[0] * tileSize,
+                            mouseoverTileCoords[1] * tileSize,
+                            tileSize,
+                            tileSize);
+      graphicsTilesMouseover.endFill();
+    }
   };
 
   graphicsMenu = new PIXI.Graphics();
@@ -81,8 +108,10 @@ function onLoaded(){
                                      mapZoom = Math.min(mapZoom * 2, 8);
                                      tilesContainer.scale.x = tilesContainer.scale.y = mapZoom;
 
-                                     tilesContainer.position.x -= 512 * mapZoom / 2;
-                                     tilesContainer.position.y -= 400 * mapZoom / 2;
+                                     tilesContainer.position.x = -1 * selectedTileCoords[0] * mapZoom *
+                                       tileSize + tileSize * mapWidth / 2 + 256;
+                                     tilesContainer.position.y = -1 * selectedTileCoords[1] * mapZoom *
+                                       tileSize + tileSize * mapHeight / 2;
 
                                      tilesContainer.position.x = Math.max(tilesContainer.position.x, -1 * tileSize * mapWidth * mapZoom + 1280);
                                      tilesContainer.position.x = Math.min(tilesContainer.position.x, 256);
@@ -94,8 +123,10 @@ function onLoaded(){
                                      mapZoom = Math.max(mapZoom / 2, 1);
                                      tilesContainer.scale.x = tilesContainer.scale.y = mapZoom;
 
-                                     tilesContainer.position.x += 512 * mapZoom;
-                                     tilesContainer.position.y += 400 * mapZoom;
+                                     tilesContainer.position.x = -1 * selectedTileCoords[0] * mapZoom *
+                                       tileSize + tileSize * mapWidth / 2 + 256;
+                                     tilesContainer.position.y = -1 * selectedTileCoords[1] * mapZoom *
+                                       tileSize + tileSize * mapHeight / 2;
 
                                      tilesContainer.position.x = Math.max(tilesContainer.position.x, -1 * tileSize * mapWidth * mapZoom + 1280);
                                      tilesContainer.position.x = Math.min(tilesContainer.position.x, 256);
