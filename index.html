@@ -11,33 +11,30 @@
                 border: 5px solid #000000;
             }
 		</style>
-        <script src="pixi.dev.js"></script>
-        <script src="generateLevel.js"></script>
+        <script src="pixi.dev.js"></script>\
+        <script src="tilemap.js"></script>
 		<script src="main.js"></script>
 	</head>
 	<body>
         <script>
+            // For zoomed-in pixel art, we want crisp pixels instead of fuzziness
             PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
 
-            var stage = new PIXI.Stage(0x888888, true);
-            var renderer = PIXI.autoDetectRenderer(1280,800);
-
-            var tileAtlas = ["citystates.json"];
-            var loader = new PIXI.AssetLoader(tileAtlas);
-
-            var tilesContainer = new PIXI.DisplayObjectContainer();
-            tilesContainer.position.x = 256;
-            tilesContainer.interactive = true;
-            stage.addChild(tilesContainer);
-
-            var menuContainer = new PIXI.DisplayObjectContainer();
-            menuContainer.interactive = true;
-            stage.addChild(menuContainer);
-
+            // Create the stage. This will be used to add sprites (or sprite containers) to the screen.
+            var stage = new PIXI.Stage(0x888888);
+            // Create the renderer and add it to the page.
+            // (autoDetectRenderer will choose hardware accelerated if possible)
+            var renderWidth = 800;
+            var renderHeight = 600;
+            var renderer = PIXI.autoDetectRenderer(renderWidth, renderHeight);
             document.body.appendChild(renderer.view);
 
-            loader.onComplete = onLoaded
+            // Set up the asset loader for sprite images with the .json data and a callback
+            var tileAtlas = ["citystates.json"];
+            var loader = new PIXI.AssetLoader(tileAtlas);
+            loader.onComplete = onLoaded;
             loader.load();
+
         </script>
 	</body>
 </html>
