@@ -20,7 +20,7 @@ function Main(){
   //document.body.appendChild(renderer.view);
 
   // Set up the asset loader for sprite images with the .json data and a callback
-  var tileAtlas = ["citystates.json"];
+  var tileAtlas = ["tiles.json"];
   var loader = new PIXI.AssetLoader(tileAtlas);
   loader.onComplete = onLoaded;
   loader.load();
