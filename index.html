@@ -11,14 +11,16 @@
                 border: 5px solid #000000;
             }
 		</style>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="pixi.dev.js"></script>
         <script src="tilemap.js"></script>
         <script src="menu.js"></script>
 		<script src="main.js"></script>
 	</head>
 	<body>
+		<p id="demo"></p>
         <script>
-        main = new Main();
+        $("#demo").append(Main());
         </script>
 	</body>
 </html>

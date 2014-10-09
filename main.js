@@ -17,13 +17,15 @@ function Main(){
   // Create the renderer and add it to the page.
   // (autoDetectRenderer will choose hardware accelerated if possible)
   renderer = PIXI.autoDetectRenderer(renderWidth, renderHeight);
-  document.body.appendChild(renderer.view);
+  //document.body.appendChild(renderer.view);
 
   // Set up the asset loader for sprite images with the .json data and a callback
   var tileAtlas = ["citystates.json"];
   var loader = new PIXI.AssetLoader(tileAtlas);
   loader.onComplete = onLoaded;
   loader.load();
+
+  return renderer.view;
 }
 
 // called when sprites are finished loading
