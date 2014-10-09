@@ -6,9 +6,9 @@ var renderHeight = 600;
 
 var tilemap = null;
 var menu = null;
-var menuBarWidth = 256;
+var menuBarWidth = 120;
 
-function Main(){
+function Main(tilesPath, w, h){
   // For zoomed-in pixel art, we want crisp pixels instead of fuzziness
   PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
 
@@ -16,11 +16,15 @@ function Main(){
   stage = new PIXI.Stage(0x888888);
   // Create the renderer and add it to the page.
   // (autoDetectRenderer will choose hardware accelerated if possible)
+  if(w != 0 && h != 0){
+    renderWidth = w;
+    renderHeight = h;
+  }
   renderer = PIXI.autoDetectRenderer(renderWidth, renderHeight);
   //document.body.appendChild(renderer.view);
 
   // Set up the asset loader for sprite images with the .json data and a callback
-  var tileAtlas = ["tiles.json"];
+  var tileAtlas = [tilesPath + "tiles.json"];
   var loader = new PIXI.AssetLoader(tileAtlas);
   loader.onComplete = onLoaded;
   loader.load();
