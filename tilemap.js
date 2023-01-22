@@ -1,8 +1,8 @@
-Tilemap.prototype = new PIXI.DisplayObjectContainer();
+Tilemap.prototype = new PIXI.Container();
 Tilemap.prototype.constructor = Tilemap;
 
 function Tilemap(width, height){
-  PIXI.DisplayObjectContainer.call(this);
+  PIXI.Container.call(this);
   this.interactive = true;
 
   this.tilesWidth = width;
@@ -27,10 +27,10 @@ function Tilemap(width, height){
   this.addChild(this.mouseoverGraphics);
 
   this.mousedown = this.touchstart = function(data) {
-    if(data.getLocalPosition(this.parent).x > menuBarWidth) {
+    if(data.data.getLocalPosition(this.parent).x > menuBarWidth) {
       this.dragging = true;
-      this.mousePressPoint[0] = data.getLocalPosition(this.parent).x - this.position.x;
-      this.mousePressPoint[1] = data.getLocalPosition(this.parent).y - this.position.y;
+      this.mousePressPoint[0] = data.data.getLocalPosition(this.parent).x - this.position.x;
+      this.mousePressPoint[1] = data.data.getLocalPosition(this.parent).y - this.position.y;
 
       this.selectTile(Math.floor(this.mousePressPoint[0] / (this.tileSize * this.zoom)),
                  Math.floor(this.mousePressPoint[1] / (this.tileSize * this.zoom)));
@@ -44,7 +44,7 @@ function Tilemap(width, height){
   {
     if(this.dragging)
     {
-      var position = data.getLocalPosition(this.parent);
+      var position = data.data.getLocalPosition(this.parent);
       this.position.x = position.x - this.mousePressPoint[0];
       this.position.y = position.y - this.mousePressPoint[1];
 
@@ -52,8 +52,8 @@ function Tilemap(width, height){
     }
     else{
       var mouseOverPoint = [0, 0];
-      mouseOverPoint[0] = data.getLocalPosition(this.parent).x - this.position.x;
-      mouseOverPoint[1] = data.getLocalPosition(this.parent).y - this.position.y;
+      mouseOverPoint[0] = data.data.getLocalPosition(this.parent).x - this.position.x;
+      mouseOverPoint[1] = data.data.getLocalPosition(this.parent).y - this.position.y;
 
       var mouseoverTileCoords = [Math.floor(mouseOverPoint[0] / (this.tileSize * this.zoom)),
                             Math.floor(mouseOverPoint[1] / (this.tileSize * this.zoom))];
@@ -143,7 +143,7 @@ Tilemap.prototype.spawnLandmass = function(size, x, y){
 
 Tilemap.prototype.selectTile = function(x, y){
   this.selectedTileCoords = [x, y];
-  menu.selectedTileText.setText("Selected Tile: " + this.selectedTileCoords);
+  menu.selectedTileText.text = "Selected Tile: " + this.selectedTileCoords;
   this.selectedGraphics.clear();
   this.selectedGraphics.lineStyle(2, 0xFFFF00, 1);
   this.selectedGraphics.beginFill(0x000000, 0);

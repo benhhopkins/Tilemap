@@ -1,8 +1,8 @@
-Menu.prototype = new PIXI.DisplayObjectContainer();
+Menu.prototype = new PIXI.Container();
 Menu.prototype.constructor = Menu;
 
 function Menu(){
-  PIXI.DisplayObjectContainer.call(this);
+  PIXI.Container.call(this);
   this.interactive = true;
 
   this.background = new PIXI.Graphics();

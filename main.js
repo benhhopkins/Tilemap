@@ -10,10 +10,10 @@ var menuBarWidth = 120;
 
 function Main(tilesPath, w, h){
   // For zoomed-in pixel art, we want crisp pixels instead of fuzziness
-  PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
+  PIXI.settings.SCALE_MODES = PIXI.SCALE_MODES.NEAREST;
 
   // Create the stage. This will be used to add sprites (or sprite containers) to the screen.
-  stage = new PIXI.Stage(0x888888);
+  stage = new PIXI.Container();//Stage(0x888888);
   // Create the renderer and add it to the page.
   // (autoDetectRenderer will choose hardware accelerated if possible)
   if(w != 0 && h != 0){
@@ -21,12 +21,16 @@ function Main(tilesPath, w, h){
     renderHeight = h;
   }
   renderer = PIXI.autoDetectRenderer(renderWidth, renderHeight);
+
   //document.body.appendChild(renderer.view);
 
   // Set up the asset loader for sprite images with the .json data and a callback
   var tileAtlas = [tilesPath + "tiles.json"];
-  var loader = new PIXI.AssetLoader(tileAtlas);
-  loader.onComplete = onLoaded;
+  var loader = PIXI.loader;
+  //loader.getContext('2d', { willReadFrequently: true });
+
+  loader.add(tileAtlas);
+  loader.onComplete.add(onLoaded);
   loader.load();
 
   return renderer.view;
@@ -44,12 +48,11 @@ function onLoaded(){
   // zoom in on the starting tile
   tilemap.selectTile(tilemap.startLocation.x, tilemap.startLocation.y);
   tilemap.zoomIn();
-
   // begin drawing
-  requestAnimFrame(animate);
+  requestAnimationFrame(animate);
 }
 
 function animate() {
-  requestAnimFrame(animate);
+  requestAnimationFrame(animate);
   renderer.render(stage);
 }
