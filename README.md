@@ -88,3 +88,37 @@ From v4.8.9 to v5.3.12
         PixiJS Deprecation Warning: PIXI.loader instance has moved to PIXI.Loader.shared
 
         PixiJS Deprecation Warning: PIXI.Sprite.fromFrame method is deprecated, use PIXI.Sprite.from
+
+From v5.3.12 to v6.5.8
+
+    Loader mechanism changed again!
+
+    Now the loaders is being replaced with assets... and I've heard that there's may be other changes in v7 :) very funny.
+
+    I did plan to use v6 doc: https://pixijs.download/v6.x/docs/PIXI.Assets.html
+
+    But, Assets in v6 is only an opt-in package, so I have to rethink about v6 upgrade(actually it is still working with an warning of deprecated loader).
+    
+From v6.5.8 to v7.1.1
+
+    https://github.com/pixijs/pixijs/wiki/v7-Migration-Guide
+
+    Now the Assets is inside PIXI so I can use it now: https://pixijs.download/dev/docs/PIXI.Assets.html
+
+    And I also check this: https://pixijs.io/examples/?v=dev#/sprite/animatedsprite-jet.js
+
+    It seems the loader process is now completedly overhaul with v7, so we have to make more changes.
+    
+    tilemap.js:5 Uncaught (in promise) TypeError: Class constructor Container cannot be invoked without 'new'
+
+        changed PIXI.Container.call(this) -> new PIXI.Container(this);
+        
+    In migration guide: Replaces InteractionManager with EventSystem
+
+    the interraction has changed, I changed mouse*** events to new mechanism obj.on('event', function(data)) ...
+
+    But this lead to another problem, because the "data" parameter of event handler now is FederatedMouseEvent, not InterractionEvent any more. So we can't use 
+    data.data.getLocalPosition anymore.
+    
+    I have changed the code to use FederatedMouse/PointerEvent, instead. Use the event.client to replace old getLocalPosition
+
