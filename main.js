@@ -26,11 +26,11 @@ function Main(tilesPath, w, h){
 
   // Set up the asset loader for sprite images with the .json data and a callback
   var tileAtlas = [tilesPath + "tiles.json"];
-  var loader = PIXI.loader;
-  //loader.getContext('2d', { willReadFrequently: true });
+  var loader = PIXI.Loader.shared;
 
   loader.add(tileAtlas);
   loader.onComplete.add(onLoaded);
+  loader.onError.add(onError);
   loader.load();
 
   return renderer.view;
@@ -44,12 +44,15 @@ function onLoaded(){
 
   menu = new Menu();
   stage.addChild(menu);
-
   // zoom in on the starting tile
   tilemap.selectTile(tilemap.startLocation.x, tilemap.startLocation.y);
   tilemap.zoomIn();
   // begin drawing
   requestAnimationFrame(animate);
+}
+
+function onError() {
+  console.log("Error while loading resources!");
 }
 
 function animate() {

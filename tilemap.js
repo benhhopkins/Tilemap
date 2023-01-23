@@ -13,7 +13,6 @@ function Tilemap(width, height){
   this.scale.x = this.scale.y = this.zoom;
 
   this.startLocation = { x: 0, y: 0 };
-
   // fill the map with tiles
   this.generateMap();
 
@@ -70,7 +69,7 @@ function Tilemap(width, height){
 }
 
 Tilemap.prototype.addTile = function(x, y, terrain){
-  var tile = PIXI.Sprite.fromFrame(terrain);
+  var tile = PIXI.Sprite.from(terrain.toString());
   tile.position.x = x * this.tileSize;
   tile.position.y = y * this.tileSize;
   tile.tileX = x;
@@ -89,7 +88,6 @@ Tilemap.prototype.getTile = function(x, y){
 }
 
 Tilemap.prototype.generateMap = function(){
-
   // fill with ocean
   for(var i = 0; i < this.tilesWidth; ++i){
     var currentRow = [];
