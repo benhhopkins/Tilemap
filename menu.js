@@ -3,7 +3,7 @@ Menu.prototype.constructor = Menu;
 
 function Menu(){
 
-  PIXI.Container.call(this);
+  new PIXI.Container(this);
   this.interactive = true;
 
   this.background = new PIXI.Graphics();
@@ -35,21 +35,42 @@ Menu.prototype.addMenuButton = function(text, x, y, obj, callback){
   button.interactive = true;
   button.buttonMode = true;
   button.hitArea = new PIXI.Rectangle(0, 12, 30, 30);
-  button.mousedown = button.touchstart = function(data){
-    button.style = new PIXI.TextStyle({ fontFamily: "Arial", fontSize: "40px", fill: "#FF0000" });
-  };
-  button.mouseover = function(data){
+  button.on('mousedown', function(data){
+    mousedown(data, button);
+  });
+  button.on('touchstart', function(data){
+    mousedown(data, button);
+  });
+  button.on('mouseover', function(data){
     button.style = new PIXI.TextStyle({ fontFamily: "Arial", fontSize: "40px", fill: "#FFFF00" });
-  };
-  button.mouseup = button.touchend = function(data){
+  });
+  button.on('mouseup', function(data){
+    mouseup(data, button, callback, obj);
+  });
+  button.on('touchend', function(data){
+    mouseup(data, button, callback, obj);
+  });
+  button.on('mouseupoutside', function(data){
+    mouseup_outside(data, button);
+  });
+  button.on('touchendoutside', function(data){
+    mouseup_outside(data, button);
+  });
+  button.on('mouseout', function(data){
+    button.style = new PIXI.TextStyle({ fontFamily: "Arial", fontSize: "40px", fill: "#FFFFFF" });
+  });
+  this.addChild(button);
+}
+
+function mousedown(data, button) {
+    button.style = new PIXI.TextStyle({ fontFamily: "Arial", fontSize: "40px", fill: "#FF0000" });
+}
+
+function mouseup(data, button, callback, obj) {
     callback.call(obj);
     button.style = new PIXI.TextStyle({ fontFamily: "Arial", fontSize: "40px", fill: "#FFFFFF" });
-  };
-  button.mouseupoutside = button.touchendoutside = function(data){
-    button.style = new PIXI.TextStyle({ fontFamily: "Arial", fontSize: "40px", fill: "#FFFFFF" });
-  };
-  button.mouseout = function(data){
-    button.style = new PIXI.TextStyle({ fontFamily: "Arial", fontSize: "40px", fill: "#FFFFFF" });
-  };
-  this.addChild(button);
+}
+
+function mouseup_outside(data, button) {
+  button.style = new PIXI.TextStyle({ fontFamily: "Arial", fontSize: "40px", fill: "#FFFFFF" });
 }

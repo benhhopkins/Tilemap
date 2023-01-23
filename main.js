@@ -26,12 +26,12 @@ function Main(tilesPath, w, h){
 
   // Set up the asset loader for sprite images with the .json data and a callback
   var tileAtlas = [tilesPath + "tiles.json"];
-  var loader = PIXI.Loader.shared;
 
-  loader.add(tileAtlas);
-  loader.onComplete.add(onLoaded);
-  loader.onError.add(onError);
-  loader.load();
+  var loader = PIXI.Assets;
+  loader.load(tileAtlas).then(() => {
+    onLoaded();
+  });
+
 
   return renderer.view;
 }
