@@ -1,8 +1,8 @@
-Tilemap.prototype = new PIXI.DisplayObjectContainer();
+Tilemap.prototype = new PIXI.Container();
 Tilemap.prototype.constructor = Tilemap;
 
 function Tilemap(width, height){
-  PIXI.DisplayObjectContainer.call(this);
+  var myObj = new PIXI.Container(this);
   this.interactive = true;
 
   this.tilesWidth = width;
@@ -13,7 +13,6 @@ function Tilemap(width, height){
   this.scale.x = this.scale.y = this.zoom;
 
   this.startLocation = { x: 0, y: 0 };
-
   // fill the map with tiles
   this.generateMap();
 
@@ -26,51 +25,62 @@ function Tilemap(width, height){
   this.addChild(this.selectedGraphics);
   this.addChild(this.mouseoverGraphics);
 
-  this.mousedown = this.touchstart = function(data) {
-    if(data.getLocalPosition(this.parent).x > menuBarWidth) {
-      this.dragging = true;
-      this.mousePressPoint[0] = data.getLocalPosition(this.parent).x - this.position.x;
-      this.mousePressPoint[1] = data.getLocalPosition(this.parent).y - this.position.y;
+  this.on('mousedown', this.mouseDown);
+  this.on('touchstart', this.mouseDown);
+  this.on('mouseup', this.mouseUp);
+  this.on('mouseupoutside', this.mouseUp);
+  this.on('touchend', this.mouseUp);
+  this.on('touchendoutside', this.mouseUp);
+  this.on('mousemove', this.mouseMove);
+  this.on('touchmove', this.mouseMove);
+}
 
-      this.selectTile(Math.floor(this.mousePressPoint[0] / (this.tileSize * this.zoom)),
-                 Math.floor(this.mousePressPoint[1] / (this.tileSize * this.zoom)));
-    }
-  };
-  this.mouseup = this.mouseupoutside =
-    this.touchend = this.touchendoutside = function(data) {
-    this.dragging = false;
-  };
-  this.mousemove = this.touchmove = function(data)
+Tilemap.prototype.mouseDown = function(evt) {
+
+  if(evt.client.x > menuBarWidth) {
+    this.dragging = true;
+    this.mousePressPoint[0] = evt.client.x - this.position.x;
+    this.mousePressPoint[1] = evt.client.y - this.position.y;
+
+    this.selectTile(Math.floor(this.mousePressPoint[0] / (this.tileSize * this.zoom)),
+               Math.floor(this.mousePressPoint[1] / (this.tileSize * this.zoom)));
+  }
+}
+
+Tilemap.prototype.mouseUp = function(evt) {
+  this.dragging = false;
+}
+
+Tilemap.prototype.mouseMove = function(evt) {
+
+  if(this.dragging)
   {
-    if(this.dragging)
-    {
-      var position = data.getLocalPosition(this.parent);
-      this.position.x = position.x - this.mousePressPoint[0];
-      this.position.y = position.y - this.mousePressPoint[1];
+    var position = evt.client;
+    this.position.x = position.x - this.mousePressPoint[0];
+    this.position.y = position.y - this.mousePressPoint[1];
 
-      this.constrainTilemap();
-    }
-    else{
-      var mouseOverPoint = [0, 0];
-      mouseOverPoint[0] = data.getLocalPosition(this.parent).x - this.position.x;
-      mouseOverPoint[1] = data.getLocalPosition(this.parent).y - this.position.y;
+    this.constrainTilemap();
+  }
+  else{
+    var mouseOverPoint = [0, 0];
+    mouseOverPoint[0] = evt.client.x - this.position.x;
+    mouseOverPoint[1] = evt.client.y - this.position.y;
 
-      var mouseoverTileCoords = [Math.floor(mouseOverPoint[0] / (this.tileSize * this.zoom)),
-                            Math.floor(mouseOverPoint[1] / (this.tileSize * this.zoom))];
-      this.mouseoverGraphics.clear();
-      this.mouseoverGraphics.lineStyle(1, 0xFFFFFF, 1);
-      this.mouseoverGraphics.beginFill(0x000000, 0);
-      this.mouseoverGraphics.drawRect(mouseoverTileCoords[0] * this.tileSize,
-                            mouseoverTileCoords[1] * this.tileSize,
-                            this.tileSize - 1,
-                            this.tileSize - 1);
-      this.mouseoverGraphics.endFill();
-    }
-  };
+    var mouseoverTileCoords = [Math.floor(mouseOverPoint[0] / (this.tileSize * this.zoom)),
+                          Math.floor(mouseOverPoint[1] / (this.tileSize * this.zoom))];
+    this.mouseoverGraphics.clear();
+    this.mouseoverGraphics.lineStyle(1, 0xFFFFFF, 1);
+    this.mouseoverGraphics.beginFill(0x000000, 0);
+    this.mouseoverGraphics.drawRect(mouseoverTileCoords[0] * this.tileSize,
+                          mouseoverTileCoords[1] * this.tileSize,
+                          this.tileSize - 1,
+                          this.tileSize - 1);
+    this.mouseoverGraphics.endFill();
+  }
 }
 
 Tilemap.prototype.addTile = function(x, y, terrain){
-  var tile = PIXI.Sprite.fromFrame(terrain);
+  var tile = PIXI.Sprite.from(terrain.toString());
   tile.position.x = x * this.tileSize;
   tile.position.y = y * this.tileSize;
   tile.tileX = x;
@@ -89,7 +99,6 @@ Tilemap.prototype.getTile = function(x, y){
 }
 
 Tilemap.prototype.generateMap = function(){
-
   // fill with ocean
   for(var i = 0; i < this.tilesWidth; ++i){
     var currentRow = [];
@@ -143,7 +152,7 @@ Tilemap.prototype.spawnLandmass = function(size, x, y){
 
 Tilemap.prototype.selectTile = function(x, y){
   this.selectedTileCoords = [x, y];
-  menu.selectedTileText.setText("Selected Tile: " + this.selectedTileCoords);
+  menu.selectedTileText.text = "Selected Tile: " + this.selectedTileCoords;
   this.selectedGraphics.clear();
   this.selectedGraphics.lineStyle(2, 0xFFFF00, 1);
   this.selectedGraphics.beginFill(0x000000, 0);
