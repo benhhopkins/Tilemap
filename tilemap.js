@@ -1,51 +1,6 @@
 Tilemap.prototype = new PIXI.Container();
 Tilemap.prototype.constructor = Tilemap;
 
-function mouse_down(evt, this_ptr) {
-
-  if(evt.client.x > menuBarWidth) {
-    this_ptr.dragging = true;
-    this_ptr.mousePressPoint[0] = evt.client.x - this_ptr.position.x;
-    this_ptr.mousePressPoint[1] = evt.client.y - this_ptr.position.y;
-
-    this_ptr.selectTile(Math.floor(this_ptr.mousePressPoint[0] / (this_ptr.tileSize * this_ptr.zoom)),
-               Math.floor(this_ptr.mousePressPoint[1] / (this_ptr.tileSize * this_ptr.zoom)));
-  }
-}
-
-function mouse_up(evt, this_ptr) {
-  this_ptr.dragging = false;
-}
-
-function mouse_move(evt, this_ptr) {
-
-  if(this_ptr.dragging)
-  {
-    var position = evt.client;
-    this_ptr.position.x = position.x - this_ptr.mousePressPoint[0];
-    this_ptr.position.y = position.y - this_ptr.mousePressPoint[1];
-
-    this_ptr.constrainTilemap();
-  }
-  else{
-    var mouseOverPoint = [0, 0];
-    mouseOverPoint[0] = evt.client.x - this_ptr.position.x;
-    mouseOverPoint[1] = evt.client.y - this_ptr.position.y;
-
-    var mouseoverTileCoords = [Math.floor(mouseOverPoint[0] / (this_ptr.tileSize * this_ptr.zoom)),
-                          Math.floor(mouseOverPoint[1] / (this_ptr.tileSize * this_ptr.zoom))];
-    this_ptr.mouseoverGraphics.clear();
-    this_ptr.mouseoverGraphics.lineStyle(1, 0xFFFFFF, 1);
-    this_ptr.mouseoverGraphics.beginFill(0x000000, 0);
-    this_ptr.mouseoverGraphics.drawRect(mouseoverTileCoords[0] * this_ptr.tileSize,
-                          mouseoverTileCoords[1] * this_ptr.tileSize,
-                          this_ptr.tileSize - 1,
-                          this_ptr.tileSize - 1);
-    this_ptr.mouseoverGraphics.endFill();
-  }
-
-}
-
 function Tilemap(width, height){
   var myObj = new PIXI.Container(this);
   this.interactive = true;
@@ -70,30 +25,58 @@ function Tilemap(width, height){
   this.addChild(this.selectedGraphics);
   this.addChild(this.mouseoverGraphics);
 
-  this.on('mousedown', function(data) {
-    mouse_down(data, this);
-  });
-  this.on('touchstart', function(data) {
-    mouse_down(data, this);
-  });
-  this.on('mouseup', function(data) {
-    mouse_up(data, this);
-  });
-  this.on('mouseupoutside', function(data) {
-    mouse_up(data, this);
-  });
-  this.on('touchend', function(data) {
-    mouse_up(data, this);
-  });
-  this.on('touchendoutside', function(data) {
-    mouse_up(data, this);
-  });
-  this.on('mousemove', function(evt) {
-    mouse_move(evt, this);
-  });
-  this.on('touchmove', function(evt) {
-    mouse_move(evt, this);
-  });
+  this.on('mousedown', this.mouseDown);
+  this.on('touchstart', this.mouseDown);
+  this.on('mouseup', this.mouseUp);
+  this.on('mouseupoutside', this.mouseUp);
+  this.on('touchend', this.mouseUp);
+  this.on('touchendoutside', this.mouseUp);
+  this.on('mousemove', this.mouseMove);
+  this.on('touchmove', this.mouseMove);
+}
+
+Tilemap.prototype.mouseDown = function(evt) {
+
+  if(evt.client.x > menuBarWidth) {
+    this.dragging = true;
+    this.mousePressPoint[0] = evt.client.x - this.position.x;
+    this.mousePressPoint[1] = evt.client.y - this.position.y;
+
+    this.selectTile(Math.floor(this.mousePressPoint[0] / (this.tileSize * this.zoom)),
+               Math.floor(this.mousePressPoint[1] / (this.tileSize * this.zoom)));
+  }
+}
+
+Tilemap.prototype.mouseUp = function(evt) {
+  this.dragging = false;
+}
+
+Tilemap.prototype.mouseMove = function(evt) {
+
+  if(this.dragging)
+  {
+    var position = evt.client;
+    this.position.x = position.x - this.mousePressPoint[0];
+    this.position.y = position.y - this.mousePressPoint[1];
+
+    this.constrainTilemap();
+  }
+  else{
+    var mouseOverPoint = [0, 0];
+    mouseOverPoint[0] = evt.client.x - this.position.x;
+    mouseOverPoint[1] = evt.client.y - this.position.y;
+
+    var mouseoverTileCoords = [Math.floor(mouseOverPoint[0] / (this.tileSize * this.zoom)),
+                          Math.floor(mouseOverPoint[1] / (this.tileSize * this.zoom))];
+    this.mouseoverGraphics.clear();
+    this.mouseoverGraphics.lineStyle(1, 0xFFFFFF, 1);
+    this.mouseoverGraphics.beginFill(0x000000, 0);
+    this.mouseoverGraphics.drawRect(mouseoverTileCoords[0] * this.tileSize,
+                          mouseoverTileCoords[1] * this.tileSize,
+                          this.tileSize - 1,
+                          this.tileSize - 1);
+    this.mouseoverGraphics.endFill();
+  }
 }
 
 Tilemap.prototype.addTile = function(x, y, terrain){

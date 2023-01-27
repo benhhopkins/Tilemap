@@ -13,7 +13,7 @@ function Main(tilesPath, w, h){
   PIXI.settings.SCALE_MODES = PIXI.SCALE_MODES.NEAREST;
 
   // Create the stage. This will be used to add sprites (or sprite containers) to the screen.
-  stage = new PIXI.Container();//Stage(0x888888);
+  stage = new PIXI.Container();
   // Create the renderer and add it to the page.
   // (autoDetectRenderer will choose hardware accelerated if possible)
   if(w != 0 && h != 0){
@@ -21,8 +21,6 @@ function Main(tilesPath, w, h){
     renderHeight = h;
   }
   renderer = PIXI.autoDetectRenderer(renderWidth, renderHeight);
-
-  //document.body.appendChild(renderer.view);
 
   // Set up the asset loader for sprite images with the .json data and a callback
   var tileAtlas = [tilesPath + "tiles.json"];
