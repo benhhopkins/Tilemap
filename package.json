@@ -1,0 +1,30 @@
+{
+  "name": "pixijs-tilemap",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Zoomable, draggable tilemap built on PixiJS 8 — reusable core library plus a demo application.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @pixitilemap/demo",
+    "build": "npm run build --workspace @pixitilemap/core && npm run build --workspace @pixitilemap/demo",
+    "preview": "npm run preview --workspace @pixitilemap/demo",
+    "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p packages/demo/tsconfig.json",
+    "test": "npm run test --workspace @pixitilemap/core",
+    "test:watch": "npm run test:watch --workspace @pixitilemap/core",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "npm run format:check && npm run typecheck && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,103 @@
+{"frames": {
+
+"0":
+{
+  "filename": "ocean.png",
+  "frame": {"x":0,"y":0,"w":16,"h":16},
+  "rotated": false,
+  "trimmed": false,
+  "spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+  "sourceSize": {"w":16,"h":16}
+},
+"1":
+{
+  "filename": "shore.png",
+  "frame": {"x":16,"y":0,"w":16,"h":16},
+  "rotated": false,
+  "trimmed": false,
+  "spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+  "sourceSize": {"w":16,"h":16}
+},
+"2":
+{
+  "filename": "grassland.png",
+  "frame": {"x":32,"y":0,"w":16,"h":16},
+  "rotated": false,
+  "trimmed": false,
+  "spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+  "sourceSize": {"w":16,"h":16}
+},
+"3":
+{
+  "filename": "hills.png",
+  "frame": {"x":48,"y":0,"w":16,"h":16},
+  "rotated": false,
+  "trimmed": false,
+  "spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+  "sourceSize": {"w":16,"h":16}
+},
+"4":
+{
+  "filename": "mountains.png",
+  "frame": {"x":64,"y":0,"w":16,"h":16},
+  "rotated": false,
+  "trimmed": false,
+  "spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+  "sourceSize": {"w":16,"h":16}
+},
+"5":
+{
+  "filename": "outpost.png",
+  "frame": {"x":80,"y":0,"w":16,"h":16},
+  "rotated": false,
+  "trimmed": false,
+  "spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+  "sourceSize": {"w":16,"h":16}
+},
+"6":
+{
+  "filename": "village.png",
+  "frame": {"x":96,"y":0,"w":16,"h":16},
+  "rotated": false,
+  "trimmed": false,
+  "spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+  "sourceSize": {"w":16,"h":16}
+},
+"7":
+{
+  "filename": "city.png",
+  "frame": {"x":112,"y":0,"w":16,"h":16},
+  "rotated": false,
+  "trimmed": false,
+  "spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+  "sourceSize": {"w":16,"h":16}
+},
+"8":
+{
+  "filename": "farms.png",
+  "frame": {"x":128,"y":0,"w":16,"h":16},
+  "rotated": false,
+  "trimmed": false,
+  "spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+  "sourceSize": {"w":16,"h":16}
+},
+"9":
+{
+  "filename": "mine.png",
+  "frame": {"x":144,"y":0,"w":16,"h":16},
+  "rotated": false,
+  "trimmed": false,
+  "spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+  "sourceSize": {"w":16,"h":16}
+}},
+
+"meta": {
+  "app": "http://www.codeandweb.com/texturepacker ",
+  "version": "1.0",
+  "image": "tiles.png",
+  "format": "RGBA8888",
+  "size": {"w":256,"h":256},
+  "scale": "1",
+  "smartupdate": "$TexturePacker:SmartUpdate:e5b4b12fba470b8ec789ca1bc7d13108:e4f4a916ca759434f4f40b8eb634b7fc:9be8c185d95a5be4a06ec0067a3d8380$"
+}
+}

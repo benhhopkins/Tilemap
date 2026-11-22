@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@pixitilemap/core": ["../core/src/index.ts"]
+    },
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "vite.config.ts"]
+}

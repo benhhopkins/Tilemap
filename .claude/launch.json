@@ -1,0 +1,27 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "demo-dev",
+      "runtimeExecutable": "wsl",
+      "runtimeArgs": [
+        "bash",
+        "-lc",
+        "cd /mnt/c/HomeWorking/911/repos/PixiJSTilemap/packages/demo && VITE_USE_POLLING=1 exec ../../node_modules/.bin/vite --port 5173 --strictPort"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "legacy-2022",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8123",
+        "--directory",
+        "C:/HomeWorking/911/repos/PixiJSTilemap/legacy"
+      ],
+      "port": 8123
+    }
+  ]
+}
