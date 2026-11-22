@@ -29,6 +29,16 @@
         border: 5px solid #000;
         line-height: 0;
       }
+
+      /*
+        The map owns every gesture that lands on it. Without this the browser
+        claims pinch-zoom and two-finger panning on touch devices before the
+        canvas ever sees them; the wheel equivalent is handled in JS, because
+        PixiJS registers its own wheel listener as passive.
+      */
+      #app canvas {
+        touch-action: none;
+      }
     </style>
   </head>
   <body>

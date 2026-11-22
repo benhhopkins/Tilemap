@@ -171,6 +171,31 @@ substituted `event.client`, which is what introduced the off-by-a-tile selection
 bug. `FederatedPointerEvent.getLocalPosition(container)` is the direct
 replacement and does the full transform, not just a canvas offset.
 
+### Wheel events are passive, so you cannot preventDefault them
+
+Not in the migration guide, and worth knowing before you build zoom on top of
+the federated `wheel` event. `EventSystem` binds its listener like this:
+
+```js
+this.domElement.addEventListener('wheel', this.onWheel, { passive: true, capture: true });
+```
+
+A passive listener may not cancel the event, so `preventDefault()` on the
+federated `FederatedWheelEvent` is silently ignored and the browser scrolls the
+page — or, for a trackpad pinch, which arrives as `ctrl`+`wheel`, zooms the
+whole page.
+
+The federated path has a second catch: it resolves a target through the event
+boundary's hit test, which is not warm until a pointer event has been
+processed, so the **first** wheel event after a page load can be dropped if the
+pointer has not moved.
+
+Anything that needs to own the wheel should therefore attach its own
+`{ passive: false }` listener to the canvas and map coordinates with
+`renderer.events.mapPositionToPoint(point, clientX, clientY)`. That is what
+`TilemapController`'s `wheelHost` option is for. On touch devices, pair it with
+`touch-action: none` on the canvas.
+
 ## Ticker
 
 ```js

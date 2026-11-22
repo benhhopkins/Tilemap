@@ -98,10 +98,11 @@ repaints the affected tile on its own.
 ```ts
 new TilemapController({
   view, surface, viewport,
-  zoom?, minZoom?, maxZoom?, zoomStep?, wheelZoom?, clickSlop?,
+  zoom?, zoomLevels?, wheelZoom?, wheelHost?, wheelThreshold?, clickSlop?,
 })
 
 controller.zoomIn() / zoomOut() / setZoom(zoom, focus?)
+controller.zoom / zoomLevels / minZoom / maxZoom
 controller.centerOn(tile) / centerTile() / constrain()
 controller.select(tile)
 controller.setViewport({ width, height })
@@ -116,6 +117,51 @@ controller.on('zoomchange', (zoom: number) => {})
 `cursor` and a `hitArea` on `surface`, so anything drawn beside the map never
 receives map input. A press that moves no further than `clickSlop` (default 4px)
 counts as a click; anything more is a pan.
+
+#### Zoom
+
+Zoom moves along a ladder of allowed factors — `zoomLevels`, default
+`[1, 2, 3, 4, 6, 8]` — rather than being a free-floating number. They are all
+integers on purpose: at a fractional scale, nearest-neighbour sampling makes
+some tile rows one device pixel taller than their neighbours, which shimmers as
+the map moves.
+
+`zoomIn()` / `zoomOut()` move one stop and keep the viewport centre fixed.
+`setZoom(z)` snaps to the nearest stop; pass a `focus` tile to centre on it
+afterwards.
+
+#### Wheel and trackpad
+
+```ts
+new TilemapController({
+  ...,
+  wheelHost: {
+    canvas: app.canvas as HTMLCanvasElement,
+    mapPositionToPoint: (p, x, y) => app.renderer.events.mapPositionToPoint(p, x, y),
+  },
+});
+```
+
+Wheel input is handled with the controller's own non-passive DOM listener
+rather than PixiJS's federated `wheel` event, for two reasons:
+
+- PixiJS registers its wheel listener as `passive: true`, so `preventDefault()`
+  on a federated wheel event does nothing and the browser scrolls — or, for a
+  trackpad pinch, zooms the whole page — instead of the map.
+- The federated path routes through the event boundary's hit test, which
+  silently drops the first wheel event on a freshly loaded page when the
+  pointer has not moved yet.
+
+Without a `wheelHost` there is nothing to listen on, so wheel zooming stays off
+and only the programmatic API works.
+
+Events are accumulated rather than applied one-for-one, because wheel input is
+wildly inconsistent between devices: one mouse notch is a single large event
+(100px in Chrome, 3 lines in Firefox), a trackpad swipe is dozens of small ones,
+and a pinch is smaller still and flagged with `ctrlKey`. One mouse notch gives
+exactly one zoom step; a trackpad gesture gives one step per `wheelThreshold`
+(default 40) pixels of travel. Zooming is anchored at the cursor, so the tile
+under the pointer stays under the pointer.
 
 ### `TerrainAtlas`
 

@@ -73,8 +73,13 @@ async function main(): Promise<void> {
     surface,
     viewport,
     zoom: INITIAL_ZOOM,
-    minZoom: 1,
-    maxZoom: 8,
+    // The controller owns wheel input directly: PixiJS's own wheel listener is
+    // passive, so it cannot stop the browser zooming the page instead.
+    wheelHost: {
+      canvas: app.canvas as HTMLCanvasElement,
+      mapPositionToPoint: (point, clientX, clientY) =>
+        app.renderer.events.mapPositionToPoint(point, clientX, clientY),
+    },
   });
 
   const hoverHighlight = new TileHighlight({

@@ -111,6 +111,18 @@ Two design points worth stating:
   surface container, so a menu bar beside the map simply never receives map
   events. The legacy code compared raw pointer X against a global
   `menuBarWidth` on every event instead.
+- **Wheel input bypasses PixiJS's event system entirely.** PixiJS registers its
+  `wheel` listener as `passive: true`, so nothing routed through it can call
+  `preventDefault()` — the browser wins and scrolls or pinch-zooms the page.
+  The federated path also drops the first wheel event on a freshly loaded page,
+  because it hit-tests through a boundary that is not warm until the pointer
+  moves. So the controller takes a `wheelHost` and attaches its own
+  non-passive listener, mapping coordinates through
+  `renderer.events.mapPositionToPoint`.
+- **Zoom is a ladder of integer factors, and wheel travel is accumulated.**
+  Fractional scale makes nearest-neighbour pixel art shimmer, and applying one
+  zoom step per wheel event makes a mouse feel coarse and a trackpad
+  uncontrollable. See `WheelStepAccumulator` and `zoomLevels`.
 
 ### `MapGenerator` and `Rng` — content
 

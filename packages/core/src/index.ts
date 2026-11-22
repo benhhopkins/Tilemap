@@ -28,7 +28,22 @@ export { TilemapView } from './TilemapView';
 export type { TilemapViewOptions } from './TilemapView';
 
 export { TilemapController } from './TilemapController';
-export type { TilemapControllerOptions, TilemapControllerEvents } from './TilemapController';
+export type {
+  TilemapControllerOptions,
+  TilemapControllerEvents,
+  WheelZoomHost,
+} from './TilemapController';
+
+export { WheelStepAccumulator, normalizePixels } from './WheelStepAccumulator';
+export type { WheelDelta, WheelStepAccumulatorOptions } from './WheelStepAccumulator';
+
+export {
+  DEFAULT_ZOOM_LEVELS,
+  normalizeZoomLevels,
+  nearestZoomIndex,
+  snapToZoomLevel,
+  stepZoomLevel,
+} from './zoomLevels';
 
 export { SpritesheetTerrainAtlas, setPixelArtFiltering } from './TerrainAtlas';
 export type { TerrainAtlas, SpritesheetTerrainAtlasOptions } from './TerrainAtlas';

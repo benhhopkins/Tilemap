@@ -1,7 +1,27 @@
-import { EventEmitter, Rectangle } from 'pixi.js';
-import type { Container, FederatedPointerEvent, FederatedWheelEvent, PointData } from 'pixi.js';
+import { EventEmitter, Point, Rectangle } from 'pixi.js';
+import type { Container, FederatedPointerEvent, PointData } from 'pixi.js';
 import type { TilemapView } from './TilemapView';
 import type { Size, TileCoord } from './types';
+import { WheelStepAccumulator } from './WheelStepAccumulator';
+import {
+  DEFAULT_ZOOM_LEVELS,
+  normalizeZoomLevels,
+  snapToZoomLevel,
+  stepZoomLevel,
+} from './zoomLevels';
+
+/**
+ * What {@link TilemapController} needs in order to own wheel input.
+ *
+ * `app.renderer` provides both members; the demo passes
+ * `{ canvas: app.canvas, mapPositionToPoint: ... }`.
+ */
+export interface WheelZoomHost {
+  /** The canvas element the wheel listener is attached to. */
+  canvas: HTMLElement;
+  /** Converts client coordinates into PixiJS global space, writing into `point`. */
+  mapPositionToPoint(point: PointData, clientX: number, clientY: number): void;
+}
 
 export interface TilemapControllerOptions {
   /** The map being driven. Must already be a direct child of `surface`. */
@@ -14,16 +34,33 @@ export interface TilemapControllerOptions {
   surface: Container;
   /** Size of the visible map area, in surface-space pixels. */
   viewport: Size;
-  /** Starting zoom factor. Defaults to `2`. */
+  /**
+   * Allowed zoom factors, ascending. Defaults to {@link DEFAULT_ZOOM_LEVELS}
+   * (`[1, 2, 3, 4, 6, 8]`) — integers, so pixel art stays crisp at every stop.
+   */
+  zoomLevels?: readonly number[];
+  /** Starting zoom. Snapped to the nearest level. Defaults to `2`. */
   zoom?: number;
-  /** Lower zoom bound. Defaults to `1`. */
-  minZoom?: number;
-  /** Upper zoom bound. Defaults to `8`. */
-  maxZoom?: number;
-  /** Multiplier applied by {@link TilemapController.zoomIn}. Defaults to `2`. */
-  zoomStep?: number;
-  /** Enables zooming with the mouse wheel, anchored at the cursor. Defaults to `true`. */
+  /**
+   * Enables zooming with the wheel and with a trackpad pinch. Requires
+   * {@link TilemapControllerOptions.wheelHost}; without it there is nothing to
+   * listen on and wheel zooming stays off. Defaults to `true`.
+   */
   wheelZoom?: boolean;
+  /**
+   * Where wheel input comes from — normally built from `app`.
+   *
+   * The controller attaches its own non-passive `wheel` listener rather than
+   * using PixiJS's federated `wheel` event, for two reasons. PixiJS registers
+   * its wheel listener as `passive: true`, so `preventDefault()` on a federated
+   * wheel event is a no-op and the browser scrolls or pinch-zooms the page
+   * instead of the map. And the federated path routes through the event
+   * boundary's hit test, which silently drops the first wheel event on a
+   * freshly loaded page if the pointer has not moved yet.
+   */
+  wheelHost?: WheelZoomHost;
+  /** Scroll distance, in pixels, per zoom step. Defaults to `40`. */
+  wheelThreshold?: number;
   /**
    * How far the pointer may travel during a press and still count as a click
    * rather than a drag, in surface pixels. Defaults to `4`.
@@ -58,13 +95,17 @@ export class TilemapController extends EventEmitter<TilemapControllerEvents> {
   readonly view: TilemapView;
   readonly surface: Container;
 
+  readonly #zoomLevels: number[];
+  readonly #clickSlop: number;
+  readonly #wheelHost: WheelZoomHost | undefined;
+  readonly #wheelAccumulator: WheelStepAccumulator;
+
+  /** Scratch points, reused so wheel handling allocates nothing per event. */
+  readonly #globalPoint = new Point();
+  readonly #localPoint = new Point();
+
   #viewport: Size;
   #zoom: number;
-  readonly #minZoom: number;
-  readonly #maxZoom: number;
-  readonly #zoomStep: number;
-  readonly #clickSlop: number;
-  readonly #wheelZoom: boolean;
 
   #selectedTile: TileCoord | null = null;
   #hoveredTile: TileCoord | null = null;
@@ -81,11 +122,11 @@ export class TilemapController extends EventEmitter<TilemapControllerEvents> {
       view,
       surface,
       viewport,
+      zoomLevels = DEFAULT_ZOOM_LEVELS,
       zoom = 2,
-      minZoom = 1,
-      maxZoom = 8,
-      zoomStep = 2,
       wheelZoom = true,
+      wheelHost,
+      wheelThreshold = 40,
       clickSlop = 4,
     } = options;
 
@@ -96,12 +137,11 @@ export class TilemapController extends EventEmitter<TilemapControllerEvents> {
     this.view = view;
     this.surface = surface;
     this.#viewport = viewport;
-    this.#minZoom = minZoom;
-    this.#maxZoom = maxZoom;
-    this.#zoomStep = zoomStep;
-    this.#wheelZoom = wheelZoom;
+    this.#zoomLevels = normalizeZoomLevels(zoomLevels);
     this.#clickSlop = clickSlop;
-    this.#zoom = clamp(zoom, minZoom, maxZoom);
+    this.#wheelHost = wheelZoom ? wheelHost : undefined;
+    this.#wheelAccumulator = new WheelStepAccumulator({ threshold: wheelThreshold });
+    this.#zoom = snapToZoomLevel(this.#zoomLevels, zoom);
 
     this.view.scale.set(this.#zoom);
 
@@ -117,9 +157,9 @@ export class TilemapController extends EventEmitter<TilemapControllerEvents> {
     surface.on('pointerupoutside', this.#onPointerUp);
     surface.on('pointerleave', this.#onPointerLeave);
 
-    if (wheelZoom) {
-      surface.on('wheel', this.#onWheel);
-    }
+    // Non-passive, so preventDefault() actually stops the page scrolling and
+    // stops a trackpad pinch zooming the browser.
+    this.#wheelHost?.canvas.addEventListener('wheel', this.#onWheel, { passive: false });
 
     this.constrain();
   }
@@ -128,12 +168,17 @@ export class TilemapController extends EventEmitter<TilemapControllerEvents> {
     return this.#zoom;
   }
 
+  /** The allowed zoom factors, ascending. */
+  get zoomLevels(): readonly number[] {
+    return this.#zoomLevels;
+  }
+
   get minZoom(): number {
-    return this.#minZoom;
+    return this.#zoomLevels[0] as number;
   }
 
   get maxZoom(): number {
-    return this.#maxZoom;
+    return this.#zoomLevels[this.#zoomLevels.length - 1] as number;
   }
 
   get selectedTile(): TileCoord | null {
@@ -165,32 +210,32 @@ export class TilemapController extends EventEmitter<TilemapControllerEvents> {
     this.emit('tileselect', tile);
   }
 
+  /** Moves one stop up the zoom ladder, keeping the viewport centre fixed. */
   zoomIn(): void {
-    this.setZoom(this.#zoom * this.#zoomStep);
+    this.#zoomBySteps(1);
   }
 
+  /** Moves one stop down the zoom ladder, keeping the viewport centre fixed. */
   zoomOut(): void {
-    this.setZoom(this.#zoom / this.#zoomStep);
+    this.#zoomBySteps(-1);
   }
 
   /**
-   * Sets the zoom factor, keeping `focus` under the viewport centre.
-   * Defaults to focusing the selected tile, falling back to whatever tile is
-   * currently centred, so zooming never teleports the camera.
+   * Sets the zoom factor, snapped to the nearest allowed level.
+   *
+   * Rescales around the viewport centre, so the camera stays put. Pass `focus`
+   * to centre on a tile afterwards.
    */
   setZoom(zoom: number, focus?: TileCoord): void {
-    const next = clamp(zoom, this.#minZoom, this.#maxZoom);
+    const next = snapToZoomLevel(this.#zoomLevels, zoom);
 
-    if (next === this.#zoom) {
-      return;
+    if (next !== this.#zoom) {
+      this.#applyZoom(next, this.#viewportCenter());
     }
 
-    const anchor = focus ?? this.#selectedTile ?? this.centerTile();
-
-    this.#zoom = next;
-    this.view.scale.set(next);
-    this.centerOn(anchor);
-    this.emit('zoomchange', next);
+    if (focus) {
+      this.centerOn(focus);
+    }
   }
 
   /** Centres the viewport on a tile, then re-applies the bounds constraint. */
@@ -236,11 +281,42 @@ export class TilemapController extends EventEmitter<TilemapControllerEvents> {
     this.surface.off('pointerupoutside', this.#onPointerUp);
     this.surface.off('pointerleave', this.#onPointerLeave);
 
-    if (this.#wheelZoom) {
-      this.surface.off('wheel', this.#onWheel);
-    }
+    this.#wheelHost?.canvas.removeEventListener('wheel', this.#onWheel);
 
     this.removeAllListeners();
+  }
+
+  /**
+   * Rescales around a fixed point in surface space.
+   *
+   * The maths runs off `view.position` and the current zoom rather than
+   * `getLocalPosition`, because the view's world transform is only recomputed
+   * at render time — reading it back inside the same frame as a scale change
+   * yields the previous frame's value.
+   */
+  #applyZoom(next: number, surfaceAnchor: PointData): void {
+    const viewX = (surfaceAnchor.x - this.view.position.x) / this.#zoom;
+    const viewY = (surfaceAnchor.y - this.view.position.y) / this.#zoom;
+
+    this.#zoom = next;
+    this.view.scale.set(next);
+    this.view.position.set(surfaceAnchor.x - viewX * next, surfaceAnchor.y - viewY * next);
+    this.constrain();
+    this.emit('zoomchange', next);
+  }
+
+  #zoomBySteps(steps: number, surfaceAnchor?: PointData): void {
+    const next = stepZoomLevel(this.#zoomLevels, this.#zoom, steps);
+
+    if (next === this.#zoom) {
+      return;
+    }
+
+    this.#applyZoom(next, surfaceAnchor ?? this.#viewportCenter());
+  }
+
+  #viewportCenter(): PointData {
+    return { x: this.#viewport.width / 2, y: this.#viewport.height / 2 };
   }
 
   #onPointerDown = (event: FederatedPointerEvent): void => {
@@ -290,27 +366,39 @@ export class TilemapController extends EventEmitter<TilemapControllerEvents> {
     this.#setHovered(null);
   };
 
-  #onWheel = (event: FederatedWheelEvent): void => {
-    const direction = event.deltaY < 0 ? this.#zoomStep : 1 / this.#zoomStep;
-    const next = clamp(this.#zoom * direction, this.#minZoom, this.#maxZoom);
+  #onWheel = (event: WheelEvent): void => {
+    const host = this.#wheelHost;
 
-    if (next === this.#zoom) {
+    if (!host) {
       return;
     }
 
-    // Keep the tile under the cursor pinned while the scale changes.
-    const viewPoint = event.getLocalPosition(this.view);
-    const surfacePoint = event.getLocalPosition(this.surface);
+    // The canvas belongs to the map, so the page never scrolls under it —
+    // whether or not this particular event ends up changing the zoom.
+    event.preventDefault();
 
-    this.#zoom = next;
-    this.view.scale.set(next);
-    this.view.position.set(
-      surfacePoint.x - viewPoint.x * next,
-      surfacePoint.y - viewPoint.y * next,
-    );
-    this.constrain();
-    this.emit('zoomchange', next);
+    host.mapPositionToPoint(this.#globalPoint, event.clientX, event.clientY);
+    const surfacePoint = this.surface.toLocal(this.#globalPoint, undefined, this.#localPoint);
+
+    if (!this.#insideViewport(surfacePoint)) {
+      return;
+    }
+
+    const steps = this.#wheelAccumulator.push(event);
+
+    if (steps !== 0) {
+      this.#zoomBySteps(steps, surfacePoint);
+    }
   };
+
+  #insideViewport(point: PointData): boolean {
+    return (
+      point.x >= 0 &&
+      point.y >= 0 &&
+      point.x <= this.#viewport.width &&
+      point.y <= this.#viewport.height
+    );
+  }
 
   #tileUnder(event: FederatedPointerEvent): TileCoord | null {
     const tile = this.view.tileAt(event.getLocalPosition(this.view));
@@ -327,10 +415,6 @@ export class TilemapController extends EventEmitter<TilemapControllerEvents> {
     this.#hoveredTile = tile;
     this.emit('tilehover', tile);
   }
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
 }
 
 /** Clamps one axis: pinned to the edges when larger than the viewport, centred when smaller. */
