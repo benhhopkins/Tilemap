@@ -26,7 +26,9 @@ map is drawn. There is no emergency here — but also no safety net, because
 nothing is pinned, typed or tested.
 
 Unmerged work exists on `origin/fix/selectile` (2 commits) that never reached
-`master`. See finding 1 for why it should not be merged as-is.
+`master`. See finding P1-a for the root cause it patches, and
+[appendix 5](#5--appendix--audit-of-originfixselectile) for a measured audit of
+the branch and its disposition.
 
 ---
 
@@ -260,3 +262,93 @@ How the measurements above were obtained, so they can be reproduced:
 
 The legacy build is preserved under [`legacy/`](../legacy/) and can still be run
 for comparison — see that folder's README.
+
+---
+
+## 5. Appendix — audit of `origin/fix/selectile`
+
+A second clone of the repository at that branch was served and measured, because
+the branch was described as carrying a real fix that never landed.
+
+### What it actually is
+
+|                         |                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| Position vs `master`    | **2 ahead, 2 behind** (not 7 ahead)                                                |
+| Merge base              | `3f208f5` · 2023-01-23 · _Merge pull request #2 from hardwarelayer/upgrade/v7_     |
+| Branch commits          | `66a9008`, `c85bab1` — both 2023-01-26; the second only removes a `console.log`    |
+| `master` since the base | `f94c9f8` _refactor code_ + merge `7ffd3ad`, both 2023-01-28                       |
+| Files changed           | `tilemap.js` only, +15 −6                                                          |
+| Trial merge today       | `git merge-tree origin/master origin/fix/selectile` → **CONFLICT in `tilemap.js`** |
+
+The conflict is unavoidable: `master`'s later refactor turned the free functions
+`mouse_down` / `mouse_move` into `Tilemap.prototype` methods, rewriting exactly
+the lines the branch edits. (The handler extraction is therefore _not_ the
+branch's work — the free functions were already in the merge base.)
+
+Net content, all of it:
+
+1. `if (this_ptr.zoom <= 2 && selY > 0) selY -= 1;` in `mouse_down`
+2. the same line in `mouse_move`, for the hover outline
+3. landmass generation lowered from `j<25 / i<12` to `j<10 / i<9`
+
+### Does the patch work?
+
+Measured on the branch build itself — surface origin `(5, 21)`, 16px tiles —
+by driving the handlers directly across the viewport and comparing the selected
+tile against the geometrically correct one.
+
+Y axis, 598 pointer rows per zoom level:
+
+| zoom | tile size | true Y error | `master` wrong | `fix/selectile` wrong |
+| ---: | --------: | -----------: | -------------: | --------------------: |
+|    1 |      16px | 1.3125 tiles |          100 % |            **31.8 %** |
+|    2 |      32px |  0.656 tiles |         66.7 % |            **33.3 %** |
+|    4 |      64px |  0.328 tiles |         35.1 % |    35.1 % (untouched) |
+|    8 |     128px |  0.164 tiles |         17.6 % |    17.6 % (untouched) |
+
+So the patch is a real, partial improvement at zoom 1 and 2 — it removes the
+whole-tile part of the error and leaves the fractional remainder. It does not
+fix the bug: roughly a third of all clicks still land on the wrong row.
+
+Full 2-D sweep, 18 600 pointer positions per zoom level on the branch build,
+counting any wrong tile (X or Y):
+
+| zoom | wrong tile | of which X | of which Y |
+| ---: | ---------: | ---------: | ---------: |
+|    1 |     53.6 % |     32.3 % |     31.5 % |
+|    2 |     44.2 % |     16.1 % |     33.5 % |
+|    4 |     40.6 % |      8.6 % |     35.0 % |
+|    8 |     20.2 % |      3.2 % |     17.5 % |
+
+The X error — 5px from the canvas's CSS border — is never addressed at all.
+
+### Why it cannot be kept
+
+The `-1` is calibrated to one page layout. Removing the default `<p>` margin
+from `index.html`, which moves the drawing surface from y=21 to y=5 and changes
+nothing else, flips the patch from help to harm:
+
+| zoom | `master` wrong | `fix/selectile` wrong |
+| ---: | -------------: | --------------------: |
+|    1 |         31.8 % |            **68.2 %** |
+|    2 |         15.9 % |            **84.1 %** |
+
+Any CSS change, page scroll, window resize with a centred canvas, or a device
+pixel ratio other than 1 has the same effect.
+
+### Disposition
+
+- **Do not merge.** It conflicts with `master`, it is layout-calibrated, and it
+  treats a symptom the rewrite removes at the source.
+- The root cause is fixed properly in `TilemapController`, which converts every
+  pointer position with `event.getLocalPosition(...)`. Verified exact — zero
+  error — at zoom 1, 2 and 8 with a deliberately offset canvas (`index.html` in
+  `packages/demo` keeps a 24px margin and a 5px border on purpose).
+- The generator tweak is preserved as configuration rather than as an edit:
+  `new LandmassGenerator({ landmassCount: 10, seedsPerLandmass: 9 })` reproduces
+  the branch's sparser maps, and the defaults (`25` / `12`) match `master`.
+  `maxSeedSize` additionally bounds the factorial recursion that made the
+  original counts expensive — the likely reason they were lowered.
+- Nothing on the branch is unique after that, so it can be deleted once its
+  intent is recorded here.
