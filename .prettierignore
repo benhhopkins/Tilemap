@@ -1,0 +1,5 @@
+dist/
+legacy/
+coverage/
+packages/demo/public/
+docs/demo.jpg

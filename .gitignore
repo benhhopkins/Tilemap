@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+*.tsbuildinfo
+
+# test / coverage
+coverage/
+
+# editor & OS
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# local env overrides
+.env
+.env.local
