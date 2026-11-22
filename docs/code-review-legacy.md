@@ -350,5 +350,9 @@ pixel ratio other than 1 has the same effect.
   the branch's sparser maps, and the defaults (`25` / `12`) match `master`.
   `maxSeedSize` additionally bounds the factorial recursion that made the
   original counts expensive — the likely reason they were lowered.
-- Nothing on the branch is unique after that, so it can be deleted once its
-  intent is recorded here.
+- Nothing on the branch is unique after that, so **it was deleted on
+  2026-11-22**, with this appendix as the record. Its tip was
+  `c85bab1fbcdc9a114bdda6fe53c5adada946d570`, kept reachable in this clone by
+  the local tag `archive/fix-selectile`; `git push origin
+archive/fix-selectile:refs/heads/fix/selectile` restores the branch verbatim
+  if it is ever wanted back.
